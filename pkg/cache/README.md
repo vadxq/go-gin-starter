@@ -1,97 +1,80 @@
-# Cache Package
+# 缓存组件（pkg/cache）
 
-## Design Decision: Redis-Only Cache
+## 设计决策：仅 Redis
 
-This package exclusively uses Redis for caching, without any in-memory cache implementation. This design decision was made for the following reasons:
+该包仅支持 Redis 作为缓存存储，不提供内存缓存实现，主要考虑如下：
 
-### Why No Memory Cache?
+1. **避免内存不可控增长**
+   - 进程内缓存容易出现内存膨胀和泄漏风险
+   - 容量无法与容器/节点资源配额严格对齐
 
-1. **Memory Leak Prevention**
-   - In-memory caches can lead to memory leaks if not properly managed
-   - Growing cache size can cause out-of-memory issues in production
-   - Difficult to control memory usage across different deployment environments
+2. **分布式一致性**
+   - 多实例部署下，本地缓存会造成数据不一致
+   - Redis 提供集中式缓存，易于一致性管理
 
-2. **Consistency in Distributed Systems**
-   - Memory caches are local to each instance
-   - In a multi-instance deployment, each instance would have different cached data
-   - Redis provides a single source of truth for all instances
+3. **监控与运维友好**
+   - Redis 有成熟的可视化与告警体系
+   - 便于设置内存上限与淘汰策略
 
-3. **Better Monitoring and Control**
-   - Redis provides built-in monitoring tools
-   - Easy to set memory limits and eviction policies
-   - Clear visibility into cache usage and performance
+4. **可恢复性**
+   - Redis 支持持久化与重启恢复
+   - 无需额外的缓存预热流程
 
-4. **Data Persistence Options**
-   - Redis can persist data to disk if needed
-   - Graceful recovery after restarts
-   - No cache warming required after deployment
-
-5. **Production Best Practices**
-   - Most production systems use Redis or similar external cache
-   - Easier to scale horizontally
-   - Better resource isolation
-
-## Usage
+## 使用方式
 
 ```go
-// Initialize cache (requires Redis)
+// 初始化缓存（依赖 Redis）
 cacheOpts := cache.Options{
     RedisAddress:      "localhost:6379",
     RedisPassword:     "password",
     RedisDB:           0,
     DefaultExpiration: 10 * time.Minute,
+    CleanupInterval:   5 * time.Minute,
 }
 
-cache, err := cache.NewCache(cacheOpts)
+cacheInstance, err := cache.NewCache(cacheOpts)
 if err != nil {
-    // Handle error - cache is not available
-    log.Warn("Cache not available, continuing without cache")
+    // Redis 不可用时可降级为 Noop
+    cacheInstance = cache.NewNoop()
 }
 
-// Use cache
-if cache != nil {
-    // Set value
-    err = cache.Set(ctx, "key", []byte("value"), 5*time.Minute)
-    
-    // Get value
-    value, err := cache.Get(ctx, "key")
-    
-    // Set object
-    user := &User{ID: 1, Name: "John"}
-    err = cache.SetObject(ctx, "user:1", user, 10*time.Minute)
-    
-    // Get object
-    var cachedUser User
-    err = cache.GetObject(ctx, "user:1", &cachedUser)
-}
+// Set / Get
+_ = cacheInstance.Set(ctx, "key", []byte("value"), 5*time.Minute)
+value, err := cacheInstance.Get(ctx, "key")
+
+// SetObject / GetObject
+user := &User{ID: 1, Name: "John"}
+_ = cacheInstance.SetObject(ctx, "user:1", user, 10*time.Minute)
+
+var cachedUser User
+err = cacheInstance.GetObject(ctx, "user:1", &cachedUser)
 ```
 
-## Cache Strategies
+## 缓存策略
 
-The package provides various caching strategies that all use Redis as the backend:
+包内提供以下策略（见 `pkg/cache/strategies.go`）：
 
-- **Cache-Aside Pattern**: Read from cache, if miss, read from database and update cache
-- **Write-Through Pattern**: Write to both cache and database
-- **Single Flight**: Prevent cache stampede by ensuring only one request loads data
-- **Bloom Filter Cache**: Use bloom filter to prevent cache penetration
+- **Cache-Aside**：缓存未命中时回源加载并写入缓存
+- **SingleFlight**：同一 key 并发请求只触发一次回源
 
-## Configuration
+## 配置
 
-Redis connection is configured through environment variables or config file:
+Redis 配置来自 `app.redis`：
 
 ```yaml
-redis:
-  host: localhost
-  port: 6379
-  password: ""
-  db: 0
+app:
+  redis:
+    enabled: true
+    host: localhost
+    port: 6379
+    password: ""
+    db: 0
 ```
 
-## Fallback Behavior
+环境变量覆盖使用 `APP_` 前缀（如 `APP_REDIS_HOST`、`APP_REDIS_ENABLED`）。
 
-If Redis is not available:
-- The application continues to work without cache
-- All cache operations return immediately without error
-- Data is fetched directly from the database
+## 降级行为
 
-This ensures the application remains functional even if the cache layer fails.
+- `cache.NewCache` 需要 Redis 地址，否则返回错误
+- 应用启动时 Redis 禁用或连接失败，会使用 `cache.NewNoop()`
+- `Noop` 实现的 `Get/GetObject` 返回 `cache.ErrNotFound`，写操作为无副作用

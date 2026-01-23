@@ -1,7 +1,7 @@
 # 开发指南
 
 ## 环境准备
-- Go 1.24+
+- Go 1.25+
 - PostgreSQL 12+
 - Redis 6+（可选）
 
@@ -10,7 +10,8 @@
 cp configs/config.example.yaml configs/config.yaml
 ```
 
-可通过环境变量覆盖配置（前缀 `APP_`）。
+默认读取 `configs/config.yaml`，可通过 `CONFIG_PATH` 指定。
+可通过环境变量覆盖配置（前缀 `APP_`，如 `APP_DB_HOST`）。
 
 ## 常用命令
 - 开发运行：`./scripts/dev.sh`

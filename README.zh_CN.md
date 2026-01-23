@@ -34,7 +34,12 @@ project-root/
 │   └── transport/                # HTTP 传输层工具（httpx/middleware）
 ├── migrations/                   # 数据库迁移文件（版本化管理）
 ├── pkg/                          # 外部包（独立可复用的组件）
+│   ├── cache/                    # Redis 缓存与策略
 │   ├── errors/                   # 错误处理包
+│   ├── jwt/                      # JWT 工具
+│   ├── logger/                   # 结构化日志
+│   ├── queue/                    # Redis 队列
+│   ├── transaction/              # 事务管理器
 │   └── utils                     # 通用工具函数
 ├── scripts/                      # 开发和部署脚本（简化流程）
 ├── .air.toml                     # 开发热重载配置
@@ -44,8 +49,18 @@ project-root/
 
 ## 快速开始
 
-## 文档
-详见 `docs/README.md`（架构、开发、维护与部署说明）。
+### 环境准备
+- Go 1.25+
+- PostgreSQL 12+
+- Redis 6+（可选）
+
+### 初始化配置
+
+```bash
+cp configs/config.example.yaml configs/config.yaml
+```
+
+默认读取 `configs/config.yaml`，可通过 `CONFIG_PATH` 指定；配置项可用 `APP_` 前缀环境变量覆盖（如 `APP_DB_HOST`、`APP_REDIS_ENABLED`）。
 
 ### 安装依赖
 
@@ -64,6 +79,9 @@ go mod download
 ### 访问Swagger文档
 
 启动服务后，访问 http://localhost:7001/swagger 查看API文档。
+
+## 文档
+详见 `docs/README.md`（架构、开发、维护与部署说明）。
 
 ## 构建与部署
 

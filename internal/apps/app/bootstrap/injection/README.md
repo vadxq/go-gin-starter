@@ -34,6 +34,15 @@ type Dependencies struct {
     Services     *Services      // 服务层依赖
     Handlers     *Handlers      // 处理器层依赖
     Config       *config.AppConfig  // 配置信息
+    Infrastructure struct {         // 基础设施依赖
+        DB                 *gorm.DB
+        Redis              *redis.Client
+        Cache              cache.Cache
+        Validator          *validator.Validate
+        Logger             logger.Logger
+        Queue              queue.Queue
+        TransactionManager transaction.Manager
+    }
 }
 ```
 
@@ -54,9 +63,11 @@ deps := injection.NewDependencies(
 
 // 使用初始化的依赖
 api.Setup(router, api.RouterConfig{
-    UserHandler: deps.Handlers.UserHandler,
-    AuthHandler: deps.Handlers.AuthHandler,
-    JWTSecret:   deps.Config.JWT.Secret,
+    UserHandler:   deps.Handlers.UserHandler,
+    AuthHandler:   deps.Handlers.AuthHandler,
+    HealthHandler: deps.Handlers.HealthHandler,
+    JWTSecret:     deps.Config.JWT.Secret,
+    Logger:        logger,
 })
 ```
 

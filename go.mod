@@ -1,6 +1,6 @@
 module github.com/vadxq/go-rest-starter
 
-go 1.24
+go 1.25
 
 require (
 	github.com/fsnotify/fsnotify v1.8.0

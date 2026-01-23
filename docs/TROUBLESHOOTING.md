@@ -2,6 +2,7 @@
 
 ## 配置未生效
 - 检查 `configs/config.yaml` 是否存在
+- 确认 `CONFIG_PATH` 指向正确路径
 - 确认环境变量前缀为 `APP_`
 
 ## 数据库连接失败
