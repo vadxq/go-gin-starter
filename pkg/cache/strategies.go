@@ -33,16 +33,16 @@ func (ca *CacheAside) Get(ctx context.Context, key string, dest interface{}) err
 	if err == nil {
 		return nil
 	}
-	
+
 	// 缓存未命中，从数据源加载
 	data, err := ca.loader(ctx, key)
 	if err != nil {
 		return err
 	}
-	
+
 	// 写入缓存（异步，避免阻塞）
 	go ca.cache.SetObject(context.Background(), key, data, ca.ttl)
-	
+
 	// 将数据复制到目标
 	return copyValue(data, dest)
 }
@@ -62,9 +62,9 @@ type SingleFlight struct {
 }
 
 type flightGroup struct {
-	wg   sync.WaitGroup
-	val  interface{}
-	err  error
+	wg  sync.WaitGroup
+	val interface{}
+	err error
 }
 
 // NewSingleFlight 创建SingleFlight缓存
@@ -84,7 +84,7 @@ func (sf *SingleFlight) Get(ctx context.Context, key string, dest interface{}) e
 	if err == nil {
 		return nil
 	}
-	
+
 	// 检查是否有正在进行的加载
 	sf.mu.Lock()
 	if fg, ok := sf.flights[key]; ok {
@@ -96,13 +96,13 @@ func (sf *SingleFlight) Get(ctx context.Context, key string, dest interface{}) e
 		}
 		return copyValue(fg.val, dest)
 	}
-	
+
 	// 创建新的flight group
 	fg := &flightGroup{}
 	fg.wg.Add(1)
 	sf.flights[key] = fg
 	sf.mu.Unlock()
-	
+
 	// 加载数据
 	fg.val, fg.err = sf.loader(ctx, key)
 	if fg.err == nil {
@@ -110,15 +110,15 @@ func (sf *SingleFlight) Get(ctx context.Context, key string, dest interface{}) e
 		sf.cache.SetObject(ctx, key, fg.val, sf.ttl)
 		copyValue(fg.val, dest)
 	}
-	
+
 	// 标记完成
 	fg.wg.Done()
-	
+
 	// 清理flight group
 	sf.mu.Lock()
 	delete(sf.flights, key)
 	sf.mu.Unlock()
-	
+
 	return fg.err
 }
 

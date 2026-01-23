@@ -23,22 +23,25 @@ package main
 
 import (
 	"context"
-	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/vadxq/go-rest-starter/internal/app"
+	"github.com/vadxq/go-rest-starter/internal/apps/app/bootstrap"
+	"github.com/vadxq/go-rest-starter/pkg/logger"
 )
 
 func main() {
+	var appLogger logger.Logger = logger.Default()
+
 	// 创建应用实例
-	application, err := app.New()
+	application, err := bootstrap.New()
 	if err != nil {
-		slog.Error("创建应用失败", "error", err)
+		appLogger.Error("创建应用失败", "error", err)
 		os.Exit(1)
 	}
+	appLogger = application.Logger()
 
 	// 启动HTTP服务器
 	serverErrCh := application.StartServer()
@@ -49,9 +52,9 @@ func main() {
 
 	select {
 	case err := <-serverErrCh:
-		slog.Error("服务器错误", "error", err)
+		appLogger.Error("服务器错误", "error", err)
 	case sig := <-signalCh:
-		slog.Info("接收到系统信号，开始优雅关闭", "signal", sig.String())
+		appLogger.Info("接收到系统信号，开始优雅关闭", "signal", sig.String())
 	}
 
 	// 优雅关闭应用
@@ -59,7 +62,7 @@ func main() {
 	defer cancel()
 
 	if err := application.Shutdown(ctx); err != nil {
-		slog.Error("应用关闭失败", "error", err)
+		appLogger.Error("应用关闭失败", "error", err)
 		os.Exit(1)
 	}
 }

@@ -44,7 +44,7 @@ func (m *GormTransactionManager) ExecuteWithOptions(ctx context.Context, opts *s
 	} else {
 		tx = tx.Begin()
 	}
-	
+
 	if tx.Error != nil {
 		return fmt.Errorf("failed to begin transaction: %w", tx.Error)
 	}
@@ -206,7 +206,7 @@ func NewTransactionContext(ctx context.Context, db *gorm.DB) (*TransactionContex
 	if tx.Error != nil {
 		return nil, tx.Error
 	}
-	
+
 	return &TransactionContext{
 		ctx: ctx,
 		tx:  tx,
@@ -250,14 +250,14 @@ func WithTransaction(ctx context.Context, db *gorm.DB, fn func(context.Context, 
 	if err != nil {
 		return err
 	}
-	
+
 	defer func() {
 		if r := recover(); r != nil {
 			tc.Rollback()
 			panic(r)
 		}
 	}()
-	
+
 	err = fn(tc.Context(), tc.DB())
 	return tc.Complete(err)
 }

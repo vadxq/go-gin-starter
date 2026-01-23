@@ -18,6 +18,7 @@ app:
     conn_max_lifetime: 30m      # 缩短连接生命周期，避免长连接问题
 
   redis:
+    enabled: ${REDIS_ENABLED:true}
     host: ${REDIS_HOST}
     port: ${REDIS_PORT:6379}
     password: ${REDIS_PASSWORD} 

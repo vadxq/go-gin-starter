@@ -149,11 +149,11 @@ func createLogFile(filename string) (*os.File, error) {
 	base := filepath.Base(filename)
 	ext := filepath.Ext(base)
 	nameWithoutExt := base[:len(base)-len(ext)]
-	
+
 	// 创建带日期的文件名
 	dateStr := time.Now().Format("2006-01-02")
 	newFilename := filepath.Join(dir, nameWithoutExt+"-"+dateStr+ext)
-	
+
 	// 确保目录存在
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return nil, err

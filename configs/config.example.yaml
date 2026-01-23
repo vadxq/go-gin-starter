@@ -18,6 +18,7 @@ app:
     conn_max_lifetime: 1h # 连接最大生命周期
 
   redis:
+    enabled: true         # 是否启用Redis（false时将自动降级为Noop）
     host: localhost       # Redis主机地址
     port: 6379            # Redis端口
     password: ""          # Redis密码 - 如需密码请使用环境变量：${REDIS_PASSWORD}

@@ -25,17 +25,13 @@ project-root/
 │   └── docker/                  
 │   └── k8s/                     
 ├── internal/                     # 内部应用代码
-│   └── app/                      # 应用核心逻辑
-│      ├── config/                # 业务配置（优化配置结构）
-│      ├── db/                    # 数据连接（简化为单一入口）
-│      ├── dto/                   # 数据传输对象
-│      ├── handlers/              # 业务handler（简化处理逻辑）
-│      ├── injection/             # 依赖注入（优化为更轻量的DI）
-│      ├── middleware/            # 中间件（按功能分组）
-│      ├── models/                # 数据模型（精简为核心字段）
-│      ├── repository/            # 数据访问层（统一接口）
-│      ├── router/                # API 路由定义
-│      └── services/              # 业务服务层（清晰的职责划分）
+│   ├── apps/                     # 应用装配入口
+│   │   └── app/                  # 当前应用
+│   │       ├── bootstrap/        # 应用启动与装配
+│   │       └── router/           # 应用路由
+│   ├── core/                     # 领域模块（auth/user/health）
+│   ├── platform/                 # 基础设施（config/db）
+│   └── transport/                # HTTP 传输层工具（httpx/middleware）
 ├── migrations/                   # 数据库迁移文件（版本化管理）
 ├── pkg/                          # 外部包（独立可复用的组件）
 │   ├── errors/                   # 错误处理包
@@ -47,6 +43,9 @@ project-root/
 ```
 
 ## 快速开始
+
+## 文档
+详见 `docs/README.md`（架构、开发、维护与部署说明）。
 
 ### 安装依赖
 
@@ -90,7 +89,7 @@ docker run -p 7001:7001 go-rest-starter
 - Database: `postgres`
 - Cache: `redis`
 - ORM: `gorm`
-- Logger: `log/slog` (Go 内置)
+- Logger: `pkg/logger`（基于 Go slog）
 - Config: `viper`
 - Test: `testify`
 - 文档: `swagger`

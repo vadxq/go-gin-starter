@@ -14,7 +14,7 @@
 - **🏭 Clean Architecture** - Three-layer architecture (Repository/Service/Handler) with comprehensive dependency injection
 - **🔒 JWT Authentication** - Complete authentication system with access/refresh tokens and token blacklisting
 - **👥 User Management** - Full CRUD operations with role-based access control (Admin/User roles)
-- **📝 Structured Logging** - Advanced logging with trace ID, request ID, and context propagation using Go's slog
+- **📝 Structured Logging** - Unified logging via `pkg/logger` (built on Go's slog) with trace/request context
 - **🚫 Rate Limiting** - IP-based request throttling with automatic cleanup
 - **📊 Health Monitoring** - Comprehensive health checks with dependency monitoring and system metrics
 - **🌐 Redis Cache** - Production-ready caching layer with TTL management and object serialization
@@ -59,17 +59,13 @@ project-root/
 │   └── docker/                  
 │   └── k8s/                     
 ├── internal/                     # Internal application code
-│   └── app/                      # Core application logic
-│       ├── config/               # Business configurations (optimized structure)
-│       ├── db/                   # Database connections (simplified to single entry)
-│       ├── dto/                  # Data Transfer Objects
-│       ├── handlers/             # Business handlers (simplified logic)
-│       ├── injection/            # Dependency injection (optimized for lightweight DI)
-│       ├── middleware/           # Middleware (grouped by functionality)
-│       ├── models/               # Data models (streamlined core fields)
-│       ├── repository/           # Data access layer (unified interface)
-│       ├── router/               # API router
-│       └── services/             # Business service layer (clear responsibility division)
+│   ├── apps/                     # Application composition roots
+│   │   └── app/                  # Current app
+│   │       ├── bootstrap/        # App bootstrap (DI, startup)
+│   │       └── router/           # App router
+│   ├── core/                     # Domain modules (auth/user/health)
+│   ├── platform/                 # Infrastructure (config/db)
+│   └── transport/                # HTTP transport helpers (httpx/middleware)
 ├── migrations/                   # Database migration files (version controlled)
 ├── pkg/                          # External packages (independent reusable components)
 │   ├── errors/                   # Custom error handling package
@@ -81,6 +77,9 @@ project-root/
 ```
 
 ## 🚀 Quick Start
+
+## 📚 Documentation
+See `docs/README.md` (Chinese) for architecture, development, maintenance, and deployment guides.
 
 ### Prerequisites
 - **Go 1.24+** - [Install Go](https://golang.org/doc/install)
@@ -278,8 +277,8 @@ go test -v ./...
 ### Test Categories
 
 ```bash
-# Unit tests (services layer)
-go test ./internal/app/services/
+# Unit tests (service layer)
+go test ./internal/core/user/service/
 
 # Integration tests (if available)
 go test -tags=integration ./...
@@ -304,7 +303,7 @@ go test -bench=. ./...
 
 ### Configuration & Utilities
 - **Configuration**: `spf13/viper` - Configuration management (YAML, ENV, JSON)
-- **Logging**: `log/slog` - Structured logging (Go 1.21+ built-in)
+- **Logging**: `pkg/logger` - Structured logging (based on Go slog)
 - **Testing**: `stretchr/testify` - Testing toolkit with assertions and mocks
 
 ### Documentation & Development

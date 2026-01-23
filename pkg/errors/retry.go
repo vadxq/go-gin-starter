@@ -10,11 +10,11 @@ import (
 
 // RetryConfig 重试配置
 type RetryConfig struct {
-	MaxAttempts     int           // 最大重试次数
-	InitialDelay    time.Duration // 初始延迟
-	MaxDelay        time.Duration // 最大延迟
-	Multiplier      float64       // 延迟倍数
-	RandomizeFactor float64       // 随机因子（0-1之间）
+	MaxAttempts     int              // 最大重试次数
+	InitialDelay    time.Duration    // 初始延迟
+	MaxDelay        time.Duration    // 最大延迟
+	Multiplier      float64          // 延迟倍数
+	RandomizeFactor float64          // 随机因子（0-1之间）
 	RetryIf         func(error) bool // 判断是否需要重试的函数
 }
 
@@ -48,7 +48,7 @@ func RetryWithContext(ctx context.Context, fn RetryableWithContextFunc, config *
 	}
 
 	var lastErr error
-	
+
 	for attempt := 0; attempt < config.MaxAttempts; attempt++ {
 		// 检查上下文是否已取消
 		if err := ctx.Err(); err != nil {
@@ -95,18 +95,18 @@ func RetryWithContext(ctx context.Context, fn RetryableWithContextFunc, config *
 func calculateDelay(attempt int, config *RetryConfig) time.Duration {
 	// 指数退避
 	delay := float64(config.InitialDelay) * math.Pow(config.Multiplier, float64(attempt))
-	
+
 	// 添加随机抖动
 	if config.RandomizeFactor > 0 {
 		randomFactor := 1.0 + (rand.Float64()*2-1)*config.RandomizeFactor
 		delay *= randomFactor
 	}
-	
+
 	// 确保不超过最大延迟
 	if delay > float64(config.MaxDelay) {
 		delay = float64(config.MaxDelay)
 	}
-	
+
 	return time.Duration(delay)
 }
 
@@ -129,7 +129,7 @@ func IsRetryable(err error) bool {
 	// 如果是HTTP状态码相关的错误，根据状态码判断
 	// 5xx错误、429、408可以重试
 	// 这里简化处理，实际使用时可根据具体错误类型判断
-	
+
 	// 默认某些错误可重试
 	return false
 }
@@ -178,10 +178,10 @@ type CircuitBreaker struct {
 	maxFailures      int
 	resetTimeout     time.Duration
 	halfOpenRequests int
-	
-	failures         int
-	lastFailureTime  time.Time
-	state            CircuitState
+
+	failures        int
+	lastFailureTime time.Time
+	state           CircuitState
 }
 
 // CircuitState 断路器状态
@@ -202,7 +202,7 @@ func NewCircuitBreaker(maxFailures int, resetTimeout time.Duration) *CircuitBrea
 		maxFailures:      maxFailures,
 		resetTimeout:     resetTimeout,
 		halfOpenRequests: 1,
-		state:           StateClosed,
+		state:            StateClosed,
 	}
 }
 
@@ -222,12 +222,12 @@ func (cb *CircuitBreaker) Execute(fn RetryableFunc) error {
 
 	// 执行函数
 	err := fn()
-	
+
 	if err != nil {
 		cb.recordFailure()
 		return err
 	}
-	
+
 	cb.recordSuccess()
 	return nil
 }
@@ -236,7 +236,7 @@ func (cb *CircuitBreaker) Execute(fn RetryableFunc) error {
 func (cb *CircuitBreaker) recordFailure() {
 	cb.failures++
 	cb.lastFailureTime = time.Now()
-	
+
 	if cb.failures >= cb.maxFailures {
 		cb.state = StateOpen
 	}

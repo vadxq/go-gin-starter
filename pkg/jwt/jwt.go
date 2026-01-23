@@ -103,4 +103,4 @@ func ParseRefreshToken(tokenString string, secret string) (uint, error) {
 func ValidateToken(tokenString string, secret string) bool {
 	_, err := ParseToken(tokenString, secret)
 	return err == nil
-} 
+}

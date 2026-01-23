@@ -54,7 +54,7 @@ func (c *redisCache) Set(ctx context.Context, key string, value []byte, expirati
 	if expiration == 0 {
 		expiration = c.defaultExpiration
 	}
-	
+
 	return c.client.Set(ctx, key, value, expiration).Err()
 }
 
@@ -74,7 +74,7 @@ func (c *redisCache) GetObject(ctx context.Context, key string, value interface{
 	if err != nil {
 		return err
 	}
-	
+
 	return json.Unmarshal(data, value)
 }
 
@@ -84,6 +84,6 @@ func (c *redisCache) SetObject(ctx context.Context, key string, value interface{
 	if err != nil {
 		return err
 	}
-	
+
 	return c.Set(ctx, key, data, expiration)
-} 
+}

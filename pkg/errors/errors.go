@@ -2,9 +2,12 @@ package errors
 
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
+
+	"github.com/vadxq/go-rest-starter/pkg/logger"
 )
+
+var log = logger.Default()
 
 // ErrorType 是错误类型的枚举
 type ErrorType string
@@ -130,7 +133,7 @@ func AsError(err error) *Error {
 func RecoverPanic(source string) {
 	if r := recover(); r != nil {
 		// 生产环境只记录必要信息
-		slog.Error("panic recovered", 
+		log.Error("panic recovered",
 			"source", source,
 			"error", fmt.Sprintf("%v", r))
 	}
@@ -139,10 +142,10 @@ func RecoverPanic(source string) {
 // RecoverPanicWithCallback 从panic中恢复，并执行回调函数
 func RecoverPanicWithCallback(source string, callback func(err interface{})) {
 	if r := recover(); r != nil {
-		slog.Error("panic recovered", 
+		log.Error("panic recovered",
 			"source", source,
 			"error", fmt.Sprintf("%v", r))
-		
+
 		if callback != nil {
 			callback(r)
 		}
